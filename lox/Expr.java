@@ -11,6 +11,8 @@ abstract public class Expr {
         R visitLiteralExpr(Literal expr);
 
         R visitUnaryExpr(Unary expr);
+
+        R visitBinaryRPNExpr(BinaryRPN expr);
     }
 
     static class Binary extends Expr {
@@ -28,6 +30,23 @@ abstract public class Expr {
         final Expr left;
         final Token operator;
         final Expr right;
+    }
+
+    static class BinaryRPN extends Expr {
+        BinaryRPN(Expr left, Token operator, Expr right) {
+            this.left = left;
+            this.right = right;
+            this.operator = operator;
+        }
+
+        @Override
+        <R> R accept(Visitor<R> visitor) {
+            return visitor.visitBinaryRPNExpr(this);
+        }
+
+        final Expr left;
+        final Expr right;
+        final Token operator;
     }
 
     static class Grouping extends Expr {
