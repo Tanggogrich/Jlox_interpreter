@@ -12,6 +12,7 @@ abstract public class Expr {
 
         R visitUnaryExpr(Unary expr);
 
+        // reverse Polish notation (RPN)
         R visitBinaryRPNExpr(BinaryRPN expr);
     }
 
@@ -32,6 +33,7 @@ abstract public class Expr {
         final Expr right;
     }
 
+    // additional form for binary operator expression - reverse Polish notation (RPN)
     static class BinaryRPN extends Expr {
         BinaryRPN(Expr left, Token operator, Expr right) {
             this.left = left;
