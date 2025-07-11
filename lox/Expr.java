@@ -14,6 +14,9 @@ abstract public class Expr {
 
         // reverse Polish notation (RPN)
         R visitBinaryRPNExpr(BinaryRPN expr);
+
+        // ternary expression (a ? b : c)
+        R visitTernaryExpr(Ternary expr);
     }
 
     static class Binary extends Expr {
@@ -90,6 +93,23 @@ abstract public class Expr {
 
         final Token operator;
         final Expr right;
+    }
+
+    static class Ternary extends Expr {
+        final Expr condition;
+        final Expr thenBranch;
+        final Expr elseBranch;
+
+        Ternary(Expr condition, Expr thenBranch, Expr elseBranch) {
+            this.condition = condition;
+            this.thenBranch = thenBranch;
+            this.elseBranch = elseBranch;
+        }
+
+        @Override
+        <R> R accept(Visitor<R> visitor) {
+            return visitor.visitTernaryExpr(this);
+        }
     }
 
     abstract <R> R accept(Visitor<R> visitor);
