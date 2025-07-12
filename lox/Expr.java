@@ -19,7 +19,7 @@ abstract public class Expr {
         R visitTernaryExpr(Ternary expr);
     }
 
-    static class Binary extends Expr {
+    public static class Binary extends Expr {
         Binary(Expr left, Token operator, Expr right) {
             this.left = left;
             this.operator = operator;
@@ -37,7 +37,7 @@ abstract public class Expr {
     }
 
     // additional form for binary operator expression - reverse Polish notation (RPN)
-    static class BinaryRPN extends Expr {
+    public static class BinaryRPN extends Expr {
         BinaryRPN(Expr left, Token operator, Expr right) {
             this.left = left;
             this.right = right;
@@ -54,7 +54,7 @@ abstract public class Expr {
         final Token operator;
     }
 
-    static class Grouping extends Expr {
+    public static class Grouping extends Expr {
         Grouping(Expr expression) {
             this.expression = expression;
         }
@@ -67,7 +67,7 @@ abstract public class Expr {
         final Expr expression;
     }
 
-    static class Literal extends Expr {
+    public static class Literal extends Expr {
         Literal(Object value) {
             this.value = value;
         }
@@ -80,7 +80,7 @@ abstract public class Expr {
         final Object value;
     }
 
-    static class Unary extends Expr {
+    public static class Unary extends Expr {
         Unary(Token operator, Expr right) {
             this.operator = operator;
             this.right = right;
@@ -95,7 +95,7 @@ abstract public class Expr {
         final Expr right;
     }
 
-    static class Ternary extends Expr {
+    public static class Ternary extends Expr {
         final Expr condition;
         final Expr thenBranch;
         final Expr elseBranch;
