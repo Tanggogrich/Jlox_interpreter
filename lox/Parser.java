@@ -86,33 +86,23 @@ public class Parser {
 
         // Error productions for binary operators without left operand
         if (match(COMMA)) {
-            error(previous(), "Missing left-hand operand for comma operator.");
-            comma();
-            return null;
+            throw error(previous(), "Missing left-hand operand for comma operator.");
         }
 
         if (match(BANG_EQUAL, EQUAL_EQUAL)) {
-            error(previous(), "Missing left-hand operand for equality operator.");
-            equality();
-            return null;
+            throw error(previous(), "Missing left-hand operand for equality operator.");
         }
 
         if (match(GREATER, GREATER_EQUAL, LESS, LESS_EQUAL)) {
-            error(previous(), "Missing left-hand operand for comparison operator.");
-            comparison();
-            return null;
+            throw error(previous(), "Missing left-hand operand for comparison operator.");
         }
 
         if (match(PLUS)) {
-            error(previous(), "Missing left-hand operand for addition operator.");
-            term();
-            return null;
+            throw error(previous(), "Missing left-hand operand for addition operator.");
         }
 
         if (match(SLASH, STAR)) {
-            error(previous(), "Missing left-hand operand for multiplication/division operator.");
-            factor();
-            return null;
+            throw error(previous(), "Missing left-hand operand for multiplication/division operator.");
         }
 
         throw error(peek(), "Expect expression!");
