@@ -70,7 +70,7 @@ public class Lox {
     }
 
     private static void report(int line, String where, String message) {
-        System.out.println("[line " + line + "] Error" + where + ": " + message);
+        System.out.println("[line " + line + "]: Error" + where + ": " + message);
         hadError = true;
     }
 
@@ -83,9 +83,9 @@ public class Lox {
         }
     }
 
-    static void runtimeError(RuntimeError error) {
-        System.err.println(error.getMessage() +
-                "\n[line" + error.token.line() + "]");
+    static void runtimeError(RuntimeError error, Class<?> errorClass) {
+        System.out.println("[line " + error.token.line() + "]: Runtime error");
+        report(error.token.line(), " at " + errorClass.getName(), error.getMessage());
         hadRuntimeError = true;
     }
 }
