@@ -7,7 +7,7 @@ public class Interpreter implements Expr.Visitor<Object> {
             Object value = evaluate(expression);
             System.out.println(stringify(value));
         } catch (RuntimeError error) {
-            Lox.runtimeError(error);
+            Lox.runtimeError(error, this.getClass());
         }
     }
 
@@ -81,11 +81,23 @@ public class Interpreter implements Expr.Visitor<Object> {
                 if (left instanceof String && right instanceof String) {
                     return (String)left + (String)right;
                 }
+
+                if (left instanceof String && right instanceof Double) {
+                    return (String)left + stringify(right);
+                }
+
+                if (left instanceof Double && right instanceof String) {
+                    return stringify(left) + right;
+                }
+
                 throw new RuntimeError(expr.operator,
                         "Operands must be two numbers or two strings.");
             }
             case SLASH:
                 checkNumberOperands(expr.operator, left, right);
+                if ((double)right == 0.0) {
+                    throw new RuntimeError(expr.operator, "Division by zero");
+                }
                 return (double)left / (double)right;
             case STAR:
                 checkNumberOperands(expr.operator, left, right);
