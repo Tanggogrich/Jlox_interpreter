@@ -17,15 +17,27 @@ public class Parser {
     List<Stmt> parse() {
         List<Stmt> statements = new ArrayList<>();
         while (!isAtEnd()) {
-            statements.add(statement());
+            statements.add(declaration());
         }
         return statements;
     }
 
-    ////////////////////////////////   PARSER EXPRESSION GRAMMAR   ////////////////////////////////
+    /// /////////////////////////////   PARSER EXPRESSION GRAMMAR   ////////////////////////////////
 
     private Expr expression() {
         return comma();
+    }
+
+    private Stmt declaration() {
+        try {
+            if (match(VAR)) {
+                return varDeclaration();
+            }
+            return statement();
+        } catch (ParseError error) {
+            synchronize();
+            return null;
+        }
     }
 
     private Stmt statement() {
@@ -39,6 +51,18 @@ public class Parser {
         Expr value = expression();
         consume(SEMICOLON, "Expect ';' after value.");
         return new Stmt.Print(value);
+    }
+
+    private Stmt varDeclaration() {
+        Token name = consume(IDENTIFIER, "Expect variable name.");
+
+        Expr initializer = null;
+        if (match(EQUAL)) {
+            initializer = expression();
+        }
+
+        consume(SEMICOLON, "Expect ';' after variable declaration.");
+        return new Stmt.Var(name, initializer);
     }
 
     private Stmt expressionStatement() {
@@ -90,9 +114,21 @@ public class Parser {
     }
 
     private Expr primary() {
-        if (match(FALSE)) return new Expr.Literal(false);
-        if (match(TRUE)) return new Expr.Literal(true);
-        if (match(NIL)) return new Expr.Literal(null);
+        if (match(FALSE)) {
+            return new Expr.Literal(false);
+        }
+
+        if (match(TRUE)) {
+            return new Expr.Literal(true);
+        }
+
+        if (match(NIL)) {
+            return new Expr.Literal(null);
+        }
+
+        if (match(IDENTIFIER)) {
+            return new Expr.Variable(previous());
+        }
 
         if (match(NUMBER, STRING)) {
             return new Expr.Literal(previous().literal());
@@ -132,8 +168,9 @@ public class Parser {
 
     /**
      * Helper method for parsing left-associative binary operators.
+     *
      * @param operandParser A supplier that parses the next higher precedence level
-     * @param operators The token types for the operators at this precedence level
+     * @param operators     The token types for the operators at this precedence level
      * @return The parsed expression
      */
     private Expr parseBinaryLeftAssociative(Supplier<Expr> operandParser, TokenType... operators) {
@@ -197,7 +234,7 @@ public class Parser {
     private void synchronize() {
         advance();
 
-        while(!isAtEnd()) {
+        while (!isAtEnd()) {
             if (previous().tokenType() == SEMICOLON) {
                 switch (peek().tokenType()) {
                     case CLASS:
