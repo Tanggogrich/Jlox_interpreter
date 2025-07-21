@@ -30,6 +30,11 @@ public class AstPrinter implements Expr.Visitor<String> {
     }
 
     @Override
+    public String visitAssignExpr(Expr.Assign expr) {
+        return "";
+    }
+
+    @Override
     public String visitBinaryRPNExpr(Expr.BinaryRPN expr) {
         return transformToRPN(expr.operator.lexeme(), expr.left, expr.right);
     }

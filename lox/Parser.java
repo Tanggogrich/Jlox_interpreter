@@ -44,6 +44,9 @@ public class Parser {
         if (match(PRINT)) {
             return printStatement();
         }
+        if (match(LEFT_BRACE)) {
+            return new Stmt.Block(block());
+        }
         return expressionStatement();
     }
 
@@ -71,20 +74,44 @@ public class Parser {
         return new Stmt.Expression(value);
     }
 
-    private Expr comma() {
-        return parseBinaryLeftAssociative(this::ternary, COMMA);
+    private List<Stmt> block() {
+        List<Stmt> statements = new ArrayList<>();
+
+        while(!check(RIGHT_BRACE) && !isAtEnd()) {
+            statements.add(declaration());
+        }
+
+        consume(RIGHT_BRACE, "Expect '}' after block.");
+        return statements;
     }
 
-    private Expr ternary() {
+    ////////////////////////////////// EXPRESSIONS /////////////////////////////////////////////
+
+    private Expr comma() {
+        return parseBinaryLeftAssociative(this::assignmentOrTernary, COMMA);
+    }
+
+    private Expr assignmentOrTernary() {
         Expr expr = equality();
 
         if (match(QUESTION_MARK)) {
             Expr thenBranch = expression();
             consume(COLON, "Expect ':' after then branch of conditional expression");
-            Expr elseBranch = ternary();
+            Expr elseBranch = assignmentOrTernary();
             expr = new Expr.Ternary(expr, thenBranch, elseBranch);
         }
 
+        if (match(EQUAL)) {
+            Token equals = previous();
+            Expr value = assignmentOrTernary();
+
+            if (expr instanceof Expr.Variable) {
+                Token name = ((Expr.Variable)expr).name;
+                return new Expr.Assign(name, value);
+            }
+
+            error(equals, "Invalid assignment target.");
+        }
         return expr;
     }
 
