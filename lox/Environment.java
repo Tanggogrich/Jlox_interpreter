@@ -17,6 +17,9 @@ public class Environment {
 
     public Object get(Token name) {
         if (values.containsKey(name.lexeme())) {
+            if (values.get(name.lexeme()) == null) {
+                throw new RuntimeError(name, "Uninitialized variable " + name.lexeme() + ". Please assign this variable before calling it.");
+            }
             return values.get(name.lexeme());
         }
 
