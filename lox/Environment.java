@@ -21,7 +21,7 @@ public class Environment {
         }
 
         if (enclosing != null) {
-            enclosing.get(name);
+            return enclosing.get(name);
         }
 
         throw new RuntimeError(name,
