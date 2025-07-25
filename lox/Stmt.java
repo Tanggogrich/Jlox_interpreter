@@ -15,6 +15,10 @@ abstract class Stmt {
         R visitVarStmt(Var stmt);
 
         R visitWhileStmt(While stmt);
+
+        R visitBreakStmt(Break stmt);
+
+        R visitContinueStmt(Continue stmt);
     }
 
     static class Block extends Stmt {
@@ -101,6 +105,32 @@ abstract class Stmt {
 
         final Expr condition;
         final Stmt body;
+    }
+
+    static class Break extends Stmt {
+        Break(Token semicolon) {
+            this.semicolon = semicolon;
+        }
+
+        @Override
+        <R> R accept(Visitor<R> visitor) {
+            return visitor.visitBreakStmt(this);
+        }
+
+        final Token semicolon;
+    }
+
+    static class Continue extends Stmt {
+        Continue(Token semicolon) {
+            this.semicolon = semicolon;
+        }
+
+        @Override
+        <R> R accept(Visitor<R> visitor) {
+            return visitor.visitContinueStmt(this);
+        }
+
+        final Token semicolon;
     }
 
     abstract <R> R accept(Visitor<R> visitor);

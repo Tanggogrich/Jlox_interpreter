@@ -54,9 +54,30 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     @Override
     public Void visitWhileStmt(Stmt.While stmt) {
         while (isTruthy(evaluate(stmt.condition))) {
-            execute(stmt.body);
+            try {
+                execute(stmt.body); // Execute the loop body
+            } catch (BreakException breakExc) {
+                // Caught a break statement, exit the loop entirely.
+                break;
+            } catch (ContinueException continueExc) {
+                // Caught a continue statement, skip to the next iteration.
+                // The 'while' loop's condition will be re-evaluated.
+                continue;
+            }
         }
         return null;
+    }
+
+    @Override
+    public Void visitBreakStmt(Stmt.Break stmt) {
+        // Throw a special exception to signal breaking out of the loop.
+        throw new BreakException();
+    }
+
+    @Override
+    public Void visitContinueStmt(Stmt.Continue stmt) {
+        // Throw a special exception to signal continuing to the next iteration.
+        throw new ContinueException();
     }
 
     @Override
