@@ -27,7 +27,7 @@ public class Parser {
         return statements;
     }
 
-    /// /////////////////////////////   PARSER EXPRESSION GRAMMAR   ////////////////////////////////
+    /// /////////////////   PARSER EXPRESSION AND STATEMENT GRAMMAR   ////////////////////////////////
 
     private Expr expression() {
         return assignmentOrTernary();
@@ -75,6 +75,8 @@ public class Parser {
         }
         return expressionStatement();
     }
+
+    /////////////////////////////// STATEMENTS ////////////////////////////////////////
 
     private Stmt forStatement() {
         consume(LEFT_PAREN, "Expect '(' after 'for'.");
@@ -187,23 +189,9 @@ public class Parser {
 
     private Function function(String kind) {
         Token name = consume(IDENTIFIER, "Expect " + kind + " name.");
-        /*
-         The code for handling arguments in a call, except not split out into a helper method.
-         The outer if statement handles the zero-parameter case,
-         and the inner while loop parses parameters as long as we find commas to separate them.
-         The result is the list of tokens for each parameter’s name.
-        */
-        consume(LEFT_PAREN, "Expect '(' after " + kind + ".");
-        List<Token> parameters = new ArrayList<>();
-        if (!check(RIGHT_PAREN)) {
-            do {
-                if (parameters.size() >= 255) {
-                    error(peek(), "Can't have more than 255 parameters.");
-                }
 
-                parameters.add(consume(IDENTIFIER, "Expect parameter name."));
-            } while (match(COMMA));
-        }
+        consume(LEFT_PAREN, "Expect '(' after " + kind + ".");
+        List<Token> parameters = parameters();
         consume(RIGHT_PAREN, "Expect ')' after parameters.");
 
         //Parse the body and wrap it all up in a function node
@@ -223,7 +211,7 @@ public class Parser {
         return statements;
     }
 
-    /// /////////////////////////////// EXPRESSIONS /////////////////////////////////////////////
+    ////////////////////////////////// EXPRESSIONS /////////////////////////////////////////////
 
 //    private Expr comma() {
 //        return parseBinaryLeftAssociative(this::assignmentOrTernary, COMMA);
@@ -363,10 +351,44 @@ public class Parser {
             throw error(previous(), "Missing left-hand operand for multiplication/division operator.");
         }
 
+        if (match(FUN)) {
+            return lambdaExpression();
+        }
+
         throw error(peek(), "Expect expression!");
     }
 
+    private Expr lambdaExpression() {
+        consume(LEFT_PAREN, "Expect '(' after 'fun'.");
+        List<Token> parameters = parameters();
+        consume(RIGHT_PAREN, "Expect ')' after parameters.");
+        consume(LEFT_BRACE, "Expect '{' before function body.");
+        List<Stmt> body = block();
+        return new Expr.Lambda(parameters, body);
+    }
+
     ///////////////////////////////   HELPER METHODS   ////////////////////////////////
+
+
+    /**
+     *The code for handling arguments in a call, except not split out into a helper method.
+     *The outer if statement handles the zero-parameter case,
+     *and the inner while loop parses parameters as long as we find commas to separate them.
+     * @return The result is the list of tokens for each parameter’s name.
+     **/
+    private List<Token> parameters() {
+        List<Token> parameters = new ArrayList<>();
+        if (!check(RIGHT_PAREN)) {
+            do {
+                if (parameters.size() >= 255) {
+                    error(peek(), "Can't have more than 255 parameters.");
+                }
+
+                parameters.add(consume(IDENTIFIER, "Expect parameter name."));
+            } while (match(COMMA));
+        }
+        return parameters;
+    }
 
     /**
      * Helper method for parsing left-associative binary operators.

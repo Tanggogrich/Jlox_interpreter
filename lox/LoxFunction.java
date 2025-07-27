@@ -4,44 +4,53 @@ import lox.exceptions.ReturnException;
 
 import java.util.List;
 
-import static lox.Stmt.*;
-
 public class LoxFunction implements LoxCallable {
-    private final Function declaration;
+    // Store parameters and body directly, as they are common to both named and anonymous functions.
+    private final List<Token> params;
+    private final List<Stmt> body;
+    private final Environment closure;
+    private final String name; // For named functions; null for anonymous ones.
 
-    public LoxFunction(Function declaration) {
-        this.declaration = declaration;
+    // Unified constructor for both named and anonymous functions.
+    // The 'name' parameter is null for anonymous functions.
+    public LoxFunction(String name, List<Token> params, List<Stmt> body, Environment closure) {
+        this.name = name;
+        this.params = params;
+        this.body = body;
+        this.closure = closure;
     }
 
     @Override
     public int arity() {
-        return declaration.params.size();
+        return params.size(); // Directly use the stored params list
     }
 
     @Override
     public Object call(Interpreter interpreter, List<Object> arguments) {
-        // Each function gets its own environment where it stores those variables.
-        Environment environment = new Environment(interpreter.globals);
+        // Each function call gets its own environment.
+        // Its enclosing environment is the function's closure (where it was defined).
+        Environment environment = new Environment(closure);
 
-        /*
-        Each function call gets its own environment. Otherwise, recursion would break.
-        If there are multiple calls to the same function in play at the same time, each needs its own environment,
-        even though they are all calls to the same function.
-        */
-        for (int i = 0; i < declaration.params.size(); i++) {
-            environment.define(declaration.params.get(i).lexeme(), arguments.get(i));
+        // Bind arguments to parameters in the new environment.
+        for (int i = 0; i < params.size(); i++) {
+            environment.define(params.get(i).lexeme(), arguments.get(i));
         }
 
         try {
-            interpreter.executeBlock(declaration.body, environment);
+            interpreter.executeBlock(body, environment); // Directly use the stored body list
         } catch (ReturnException returnValue) {
             return returnValue.getValue();
         }
-        return null;
+
+        // If no explicit return, implicitly return nil.
+        return null; // Lox 'nil' is Java 'null'
     }
 
     @Override
     public String toString() {
-        return "<fn "+ declaration.name.lexeme() + ">";
+        if (name == null) {
+            return "<fn anonymous>"; // Handle anonymous functions correctly
+        }
+        return "<fn " + name + ">"; // Use the stored name
     }
 }

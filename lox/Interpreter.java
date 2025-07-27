@@ -56,7 +56,8 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     */
     @Override
     public Void visitFunctionStmt(Function stmt) {
-        LoxFunction function = new LoxFunction(stmt);
+        // Pass the function's name, parameters, body, and closure environment
+        LoxFunction function = new LoxFunction(stmt.name.lexeme(), stmt.params, stmt.body, environment);
         environment.define(stmt.name.lexeme(), function);
         return null;
     }
@@ -213,6 +214,12 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     @Override
     public Object visitVariableExpr(Variable expr) {
         return environment.get(expr.name);
+    }
+
+    @Override
+    public Object visitLambdaExpr(Lambda expr) {
+        // For lambdas, the name is null
+        return new LoxFunction(null, expr.params, expr.body, environment);
     }
 
     @Override
