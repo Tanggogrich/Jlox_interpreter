@@ -4,10 +4,12 @@ import lox.exceptions.ReturnException;
 
 import java.util.List;
 
-public class LoxFunction implements LoxCallable {
-    private final Stmt.Function declaration;
+import static lox.Stmt.*;
 
-    public LoxFunction(Stmt.Function declaration) {
+public class LoxFunction implements LoxCallable {
+    private final Function declaration;
+
+    public LoxFunction(Function declaration) {
         this.declaration = declaration;
     }
 
