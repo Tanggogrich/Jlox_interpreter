@@ -16,11 +16,15 @@ abstract class Expr {
 
         R visitUnaryExpr(Unary expr);
 
+        R visitCallExpr(Call expr);
+
         R visitBinaryRPNExpr(BinaryRPN expr);
 
         R visitTernaryExpr(Ternary expr);
 
         R visitVariableExpr(Variable expr);
+
+        R visitLambdaExpr(Lambda expr);
     }
 
     static class Binary extends Expr {
@@ -113,6 +117,23 @@ abstract class Expr {
         final Expr right;
     }
 
+    static class Call extends Expr {
+        Call(Expr callee, Token paren, List<Expr> arguments) {
+            this.callee = callee;
+            this.paren = paren;
+            this.arguments = arguments;
+        }
+
+        @Override
+        <R> R accept(Visitor<R> visitor) {
+            return visitor.visitCallExpr(this);
+        }
+
+        final Expr callee;
+        final Token paren;
+        final List<Expr> arguments;
+    }
+
     static class BinaryRPN extends Expr {
         BinaryRPN(Expr left, Token operator, Expr right) {
             this.left = left;
@@ -158,6 +179,21 @@ abstract class Expr {
         }
 
         final Token name;
+    }
+
+    static class Lambda extends Expr {
+        Lambda(List<Token> params, List<Stmt> body) {
+            this.params = params;
+            this.body = body;
+        }
+
+        @Override
+        <R> R accept(Visitor<R> visitor) {
+            return visitor.visitLambdaExpr(this);
+        }
+
+        final List<Token> params;
+        final List<Stmt> body;
     }
 
     abstract <R> R accept(Visitor<R> visitor);

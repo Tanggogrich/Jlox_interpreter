@@ -16,6 +16,7 @@ enum TokenType {
 
     // Keywords
     AND, CLASS, ELSE, FALSE, FUN, FOR, IF, NIL, OR,
+    //TODO: remove print keyword after implementing function calls
     PRINT, RETURN, SUPER, THIS, TRUE, VAR, WHILE,
     BREAK, CONTINUE,
 
