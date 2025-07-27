@@ -1,4 +1,4 @@
-package lox;
+package lox.exceptions;
 
 // This is a special exception used internally by the interpreter
 // to implement the 'continue' statement. It does not carry an error message.

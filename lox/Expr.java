@@ -16,6 +16,8 @@ abstract class Expr {
 
         R visitUnaryExpr(Unary expr);
 
+        R visitCallExpr(Call expr);
+
         R visitBinaryRPNExpr(BinaryRPN expr);
 
         R visitTernaryExpr(Ternary expr);
@@ -111,6 +113,23 @@ abstract class Expr {
 
         final Token operator;
         final Expr right;
+    }
+
+    static class Call extends Expr {
+        Call(Expr callee, Token paren, List<Expr> arguments) {
+            this.callee = callee;
+            this.paren = paren;
+            this.arguments = arguments;
+        }
+
+        @Override
+        <R> R accept(Visitor<R> visitor) {
+            return visitor.visitCallExpr(this);
+        }
+
+        final Expr callee;
+        final Token paren;
+        final List<Expr> arguments;
     }
 
     static class BinaryRPN extends Expr {

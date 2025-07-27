@@ -9,7 +9,7 @@ abstract class Stmt {
         R visitExpressionStmt(Expression stmt);
 
         R visitIfStmt(If stmt);
-
+        //TODO: remove print statement after implementing function calls
         R visitPrintStmt(Print stmt);
 
         R visitVarStmt(Var stmt);
@@ -63,7 +63,7 @@ abstract class Stmt {
         final Stmt thenBranch;
         final Stmt elseBranch;
     }
-
+    //TODO: remove print statement after implementing function calls
     static class Print extends Stmt {
         Print(Expr expression) {
             this.expression = expression;
