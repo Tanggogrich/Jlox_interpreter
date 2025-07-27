@@ -28,11 +28,14 @@ public class Parser {
     /// /////////////////////////////   PARSER EXPRESSION GRAMMAR   ////////////////////////////////
 
     private Expr expression() {
-        return comma();
+        return assignmentOrTernary();
     }
 
     private Stmt declaration() {
         try {
+            if (match(FUN)) {
+                return function("function");
+            }
             if (match(VAR)) {
                 return varDeclaration();
             }
@@ -52,6 +55,9 @@ public class Parser {
         }
         if (match(PRINT)) {
             return printStatement();
+        }
+        if (match(RETURN)) {
+            return returnStatement();
         }
         if (match(WHILE)) {
             return whileStatement();
@@ -130,6 +136,16 @@ public class Parser {
         return new Stmt.Print(value);
     }
 
+    private Stmt returnStatement() {
+        Token keyword = previous();
+        Expr value = null;
+        if (!check(SEMICOLON)) {
+            value = expression();
+        }
+        consume(SEMICOLON, "Expect ';' after return value.");
+        return new Stmt.Return(keyword, value);
+    }
+
     private Stmt varDeclaration() {
         Token name = consume(IDENTIFIER, "Expect variable name.");
 
@@ -157,7 +173,7 @@ public class Parser {
     }
 
     private Stmt continueStatement() {
-        Token semicolon  = consume(SEMICOLON, "Expect ';' after continue.");
+        Token semicolon = consume(SEMICOLON, "Expect ';' after continue.");
         return new Stmt.Continue(semicolon);
     }
 
@@ -167,10 +183,37 @@ public class Parser {
         return new Stmt.Expression(value);
     }
 
+    private Stmt.Function function(String kind) {
+        Token name = consume(IDENTIFIER, "Expect " + kind + " name.");
+        /*
+         The code for handling arguments in a call, except not split out into a helper method.
+         The outer if statement handles the zero-parameter case,
+         and the inner while loop parses parameters as long as we find commas to separate them.
+         The result is the list of tokens for each parameter’s name.
+        */
+        consume(LEFT_PAREN, "Expect '(' after " + kind + ".");
+        List<Token> parameters = new ArrayList<>();
+        if (!check(RIGHT_PAREN)) {
+            do {
+                if (parameters.size() >= 255) {
+                    error(peek(), "Can't have more than 255 parameters.");
+                }
+
+                parameters.add(consume(IDENTIFIER, "Expect parameter name."));
+            } while (match(COMMA));
+        }
+        consume(RIGHT_PAREN, "Expect ')' after parameters.");
+
+        //Parse the body and wrap it all up in a function node
+        consume(LEFT_BRACE, "Expect '{' before " + kind + " body.");
+        List<Stmt> body = block();
+        return new Stmt.Function(name, parameters, body);
+    }
+
     private List<Stmt> block() {
         List<Stmt> statements = new ArrayList<>();
 
-        while(!check(RIGHT_BRACE) && !isAtEnd()) {
+        while (!check(RIGHT_BRACE) && !isAtEnd()) {
             statements.add(declaration());
         }
 
@@ -178,11 +221,11 @@ public class Parser {
         return statements;
     }
 
-    ////////////////////////////////// EXPRESSIONS /////////////////////////////////////////////
+    /// /////////////////////////////// EXPRESSIONS /////////////////////////////////////////////
 
-    private Expr comma() {
-        return parseBinaryLeftAssociative(this::assignmentOrTernary, COMMA);
-    }
+//    private Expr comma() {
+//        return parseBinaryLeftAssociative(this::assignmentOrTernary, COMMA);
+//    }
 
     private Expr assignmentOrTernary() {
         Expr expr = or();
@@ -199,7 +242,7 @@ public class Parser {
             Expr value = assignmentOrTernary();
 
             if (expr instanceof Expr.Variable) {
-                Token name = ((Expr.Variable)expr).name;
+                Token name = ((Expr.Variable) expr).name;
                 return new Expr.Assign(name, value);
             }
 
@@ -209,27 +252,11 @@ public class Parser {
     }
 
     private Expr or() {
-        Expr expr = and();
-
-        while (match(OR)) {
-            Token operator = previous();
-            Expr right = and();
-            expr = new Expr.Logical(expr, operator, right);
-        }
-
-        return expr;
+        return parseLogicalExpression(this::and, OR);
     }
 
     private Expr and() {
-        Expr expr = equality();
-
-        while (match(AND)) {
-            Token operator = previous();
-            Expr right = equality();
-            expr = new Expr.Logical(expr, operator, right);
-        }
-
-        return expr;
+        return parseLogicalExpression(this::equality, AND);
     }
 
     private Expr equality() {
@@ -352,6 +379,16 @@ public class Parser {
             Token operator = previous();
             Expr right = operandParser.get();
             expr = new Expr.Binary(expr, operator, right);
+        }
+        return expr;
+    }
+
+    private Expr parseLogicalExpression(Supplier<Expr> operandParser, TokenType... operators) {
+        Expr expr = operandParser.get();
+        while (match(operators)) {
+            Token operator = previous();
+            Expr right = operandParser.get();
+            expr = new Expr.Logical(expr, operator, right);
         }
         return expr;
     }

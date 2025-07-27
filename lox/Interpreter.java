@@ -2,6 +2,7 @@ package lox;
 
 import lox.exceptions.BreakException;
 import lox.exceptions.ContinueException;
+import lox.exceptions.ReturnException;
 import lox.exceptions.RuntimeError;
 
 import java.util.ArrayList;
@@ -46,6 +47,17 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
         return null;
     }
 
+    /*
+    Take a function syntax node — a compile-time representation of the function — and convert it to its runtime representation.
+    LoxFunction wraps the syntax node.
+    */
+    @Override
+    public Void visitFunctionStmt(Stmt.Function stmt) {
+        LoxFunction function = new LoxFunction(stmt);
+        environment.define(stmt.name.lexeme(), function);
+        return null;
+    }
+
     @Override
     public Void visitIfStmt(Stmt.If stmt) {
         if (isTruthy(evaluate(stmt.condition))) {
@@ -62,6 +74,15 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
         Object value = evaluate(stmt.expression);
         System.out.println(stringify(value));
         return null;
+    }
+
+    @Override
+    public Void visitReturnStmt(Stmt.Return stmt) {
+        Object value = null;
+        if (stmt.value != null) {
+            value = evaluate(stmt.value);
+        }
+        throw new ReturnException(value);
     }
 
     // TODO: fix bug with a local variable can be referenced in its own initializer
@@ -278,7 +299,7 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
         stmt.accept(this);
     }
 
-    private void executeBlock(List<Stmt> statements,
+    void executeBlock(List<Stmt> statements,
                               Environment environment) {
         Environment previous = this.environment;
         try {
