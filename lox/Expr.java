@@ -181,7 +181,7 @@ abstract class Expr {
         final Token name;
     }
 
-    static class Lambda extends Expr {
+    static class Lambda extends Expr implements FunctionLikeable{
         Lambda(List<Token> params, List<Stmt> body) {
             this.params = params;
             this.body = body;
@@ -194,6 +194,16 @@ abstract class Expr {
 
         final List<Token> params;
         final List<Stmt> body;
+
+        @Override
+        public List<Token> getParams() {
+            return params;
+        }
+
+        @Override
+        public List<Stmt> getBody() {
+            return body;
+        }
     }
 
     abstract <R> R accept(Visitor<R> visitor);

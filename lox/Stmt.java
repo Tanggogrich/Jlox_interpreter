@@ -51,7 +51,7 @@ abstract class Stmt {
         final Expr expression;
     }
 
-    static class Function extends Stmt {
+    static class Function extends Stmt implements  FunctionLikeable {
         Function(Token name, List<Token> params, List<Stmt> body) {
             this.name = name;
             this.params = params;
@@ -66,6 +66,16 @@ abstract class Stmt {
         final Token name;
         final List<Token> params;
         final List<Stmt> body;
+
+        @Override
+        public List<Token> getParams() {
+            return params;
+        }
+
+        @Override
+        public List<Stmt> getBody() {
+            return body;
+        }
     }
 
     static class If extends Stmt {
@@ -144,8 +154,8 @@ abstract class Stmt {
     }
 
     static class Break extends Stmt {
-        Break(Token semicolon) {
-            this.semicolon = semicolon;
+        Break(Token keyword) {
+            this.keyword = keyword;
         }
 
         @Override
@@ -153,12 +163,12 @@ abstract class Stmt {
             return visitor.visitBreakStmt(this);
         }
 
-        final Token semicolon;
+        final Token keyword;
     }
 
     static class Continue extends Stmt {
-        Continue(Token semicolon) {
-            this.semicolon = semicolon;
+        Continue(Token keyword) {
+            this.keyword = keyword;
         }
 
         @Override
@@ -166,7 +176,7 @@ abstract class Stmt {
             return visitor.visitContinueStmt(this);
         }
 
-        final Token semicolon;
+        final Token keyword;
     }
 
     abstract <R> R accept(Visitor<R> visitor);

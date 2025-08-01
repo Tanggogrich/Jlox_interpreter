@@ -172,13 +172,15 @@ public class Parser {
     }
 
     private Stmt breakStatement() {
-        Token semicolon = consume(SEMICOLON, "Expect ';' after break.");
-        return new Break(semicolon);
+        Token keyword = previous();
+        consume(SEMICOLON, "Expect ';' after break.");
+        return new Break(keyword);
     }
 
     private Stmt continueStatement() {
-        Token semicolon = consume(SEMICOLON, "Expect ';' after continue.");
-        return new Continue(semicolon);
+        Token keyword = previous();
+        consume(SEMICOLON, "Expect ';' after continue.");
+        return new Continue(keyword);
     }
 
     private Stmt expressionStatement() {
