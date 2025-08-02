@@ -113,6 +113,12 @@ public class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     }
 
     @Override
+    public Void visitGetExpr(Expr.Get expr) {
+        resolve(expr.object);
+        return null;
+    }
+
+    @Override
     public Void visitBinaryRPNExpr(Expr.BinaryRPN expr) {
         resolve(expr.left);
         resolve(expr.right);
@@ -123,9 +129,7 @@ public class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     public Void visitTernaryExpr(Expr.Ternary expr) {
         resolve(expr.condition);
         resolve(expr.thenBranch);
-        if (expr.elseBranch != null) {
-            resolve(expr.elseBranch);
-        }
+        resolve(expr.elseBranch);
         return null;
     }
 
@@ -144,6 +148,13 @@ public class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     public Void visitLogicalExpr(Expr.Logical expr) {
         resolve(expr.left);
         resolve(expr.right);
+        return null;
+    }
+
+    @Override
+    public Void visitSetExpr(Expr.Set expr) {
+        resolve(expr.value);
+        resolve(expr.object);
         return null;
     }
 
