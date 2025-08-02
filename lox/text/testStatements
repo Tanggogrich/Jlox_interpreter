@@ -1,5 +1,3 @@
-var a = "outer";
-{
-  var b;
-  print a;
-}
+class Bagel {}
+var bagel = Bagel();
+print bagel; // Prints "Bagel instance".

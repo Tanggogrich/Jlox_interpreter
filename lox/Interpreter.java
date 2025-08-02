@@ -350,6 +350,14 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
         return null;
     }
 
+    @Override
+    public Void visitClassStmt(Stmt.Class stmt) {
+        environment.define(stmt.name.lexeme(), null);
+        LoxClass loxClass = new LoxClass(stmt.name.lexeme());
+        environment.assign(stmt.name, loxClass);
+        return null;
+    }
+
     private boolean isTruthy(Object object) {
         if (object == null) {
             return false;
