@@ -339,6 +339,10 @@ public class Parser {
             return new Literal(null);
         }
 
+        if (match(THIS)) {
+            return new This(previous());
+        }
+
         if (match(IDENTIFIER)) {
             return new Variable(previous());
         }

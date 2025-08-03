@@ -46,6 +46,12 @@ public class LoxFunction implements LoxCallable {
         return null; // Lox 'nil' is Java 'null'
     }
 
+    LoxFunction bind(LoxInstance instance) {
+        Environment environment = new Environment(closure);
+        environment.define("this", instance);
+        return new LoxFunction(this.name, this.params, this.body, environment);
+    }
+
     @Override
     public String toString() {
         if (name == null) {
