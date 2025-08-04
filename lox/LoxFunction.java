@@ -10,14 +10,16 @@ public class LoxFunction implements LoxCallable {
     private final List<Stmt> body;
     private final Environment closure;
     private final String name; // For named functions; null for anonymous ones.
+    private final boolean isInitializer;
 
     // Unified constructor for both named and anonymous functions.
     // The 'name' parameter is null for anonymous functions.
-    public LoxFunction(String name, List<Token> params, List<Stmt> body, Environment closure) {
+    public LoxFunction(String name, List<Token> params, List<Stmt> body, Environment closure, boolean isInitializer) {
         this.name = name;
         this.params = params;
         this.body = body;
         this.closure = closure;
+        this.isInitializer = isInitializer;
     }
 
     @Override
@@ -37,19 +39,23 @@ public class LoxFunction implements LoxCallable {
         }
 
         try {
-            interpreter.executeBlock(body, environment); // Directly use the stored body list
+            interpreter.executeBlock(body, environment);
         } catch (ReturnException returnValue) {
+            if (isInitializer) {
+                return closure.getAt(0, "this");
+            }
             return returnValue.getValue();
         }
-
-        // If no explicit return, implicitly return nil.
-        return null; // Lox 'nil' is Java 'null'
+        if (isInitializer) {
+            return closure.getAt(0, "this");
+        }
+        return null;
     }
 
     LoxFunction bind(LoxInstance instance) {
         Environment environment = new Environment(closure);
         environment.define("this", instance);
-        return new LoxFunction(this.name, this.params, this.body, environment);
+        return new LoxFunction(this.name, this.params, this.body, environment, isInitializer);
     }
 
     @Override

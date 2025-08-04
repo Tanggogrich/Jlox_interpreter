@@ -60,7 +60,7 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     @Override
     public Void visitFunctionStmt(Function stmt) {
         // Pass the function's name, parameters, body, and closure environment
-        LoxFunction function = new LoxFunction(stmt.name.lexeme(), stmt.params, stmt.body, environment);
+        LoxFunction function = new LoxFunction(stmt.name.lexeme(), stmt.params, stmt.body, environment, false);
         environment.define(stmt.name.lexeme(), function);
         return null;
     }
@@ -255,7 +255,7 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     @Override
     public Object visitLambdaExpr(Lambda expr) {
         // For lambdas, the name is null
-        return new LoxFunction(null, expr.params, expr.body, environment);
+        return new LoxFunction(null, expr.params, expr.body, environment, false);
     }
 
     @Override
@@ -384,7 +384,11 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 
         Map<String, LoxFunction> methods = new HashMap<>();
         for (Stmt.Function method : stmt.methods) {
-            LoxFunction function = new LoxFunction(method.name.lexeme(), method.params, method.body, environment);
+            LoxFunction function = new LoxFunction(
+                    method.name.lexeme(),
+                    method.params,
+                    method.body, environment,
+                    method.name.lexeme().equals("init"));
             methods.put(method.name.lexeme(), function);
         }
         LoxClass loxClass = new LoxClass(stmt.name.lexeme(), methods);
