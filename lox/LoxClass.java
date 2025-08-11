@@ -3,6 +3,8 @@ package lox;
 import java.util.List;
 import java.util.Map;
 
+// TODO: use a metaclasses to provide a "static" methods
+//  Hint: https://en.wikipedia.org/wiki/Metaclass
 public class LoxClass implements LoxCallable{
     final String name;
     private final Map<String, LoxFunction> methods;

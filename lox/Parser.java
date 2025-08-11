@@ -205,6 +205,7 @@ public class Parser {
         return new Expression(value);
     }
 
+    // TODO: create a getter functions
     private Function function(String kind) {
         Token name = consume(IDENTIFIER, "Expect " + kind + " name.");
 
