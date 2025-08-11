@@ -60,7 +60,7 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     @Override
     public Void visitFunctionStmt(Function stmt) {
         // Pass the function's name, parameters, body, and closure environment
-        LoxFunction function = new LoxFunction(stmt.name.lexeme(), stmt.params, stmt.body, environment);
+        LoxFunction function = new LoxFunction(stmt.name.lexeme(), stmt.params, stmt.body, environment, false);
         environment.define(stmt.name.lexeme(), function);
         return null;
     }
@@ -167,6 +167,24 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     }
 
     @Override
+    public Object visitSetExpr(Set expr) {
+        Object object = evaluate(expr.object);
+
+        if (!(object instanceof LoxInstance)) {
+            throw new RuntimeError(expr.name, "Only instances have fields.");
+        }
+
+        Object value = evaluate(expr.value);
+        ((LoxInstance)object).set(expr.name, value);
+        return value;
+    }
+
+    @Override
+    public Object visitThisExpr(This expr) {
+        return lookUpVariable(expr.keyword, expr);
+    }
+
+    @Override
     public Object visitUnaryExpr(Unary expr) {
         Object right = evaluate(expr.right);
 
@@ -204,6 +222,16 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     }
 
     @Override
+    public Object visitGetExpr(Get expr) {
+        Object object = evaluate(expr.object);
+        if (object instanceof LoxInstance) {
+            return ((LoxInstance) object).get(expr.name);
+        }
+
+        throw new RuntimeError(expr.name, "Only instances have properties.");
+    }
+
+    @Override
     public Object visitBinaryRPNExpr(BinaryRPN expr) {
         return visitBinaryExpr(new Binary(expr.left, expr.operator, expr.right));
     }
@@ -227,7 +255,7 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     @Override
     public Object visitLambdaExpr(Lambda expr) {
         // For lambdas, the name is null
-        return new LoxFunction(null, expr.params, expr.body, environment);
+        return new LoxFunction(null, expr.params, expr.body, environment, false);
     }
 
     @Override
@@ -347,6 +375,24 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     @Override
     public Void visitBlockStmt(Block stmt) {
         executeBlock(stmt.statements, new Environment(environment));
+        return null;
+    }
+
+    @Override
+    public Void visitClassStmt(Stmt.Class stmt) {
+        environment.define(stmt.name.lexeme(), null);
+
+        Map<String, LoxFunction> methods = new HashMap<>();
+        for (Stmt.Function method : stmt.methods) {
+            LoxFunction function = new LoxFunction(
+                    method.name.lexeme(),
+                    method.params,
+                    method.body, environment,
+                    method.name.lexeme().equals("init"));
+            methods.put(method.name.lexeme(), function);
+        }
+        LoxClass loxClass = new LoxClass(stmt.name.lexeme(), methods);
+        environment.assign(stmt.name, loxClass);
         return null;
     }
 

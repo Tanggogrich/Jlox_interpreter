@@ -35,6 +35,9 @@ public class Parser {
 
     private Stmt declaration() {
         try {
+            if (match(CLASS)) {
+                return classDeclaration();
+            }
             if (match(FUN)) {
                 return function("function");
             }
@@ -162,6 +165,19 @@ public class Parser {
         return new Var(name, initializer);
     }
 
+    private Stmt classDeclaration() {
+        Token name = consume(IDENTIFIER, "Expect class name.");
+        consume(LEFT_BRACE, "Expect '{' before class body.");
+
+        List<Stmt.Function> methods = new ArrayList<>();
+        while (!check(RIGHT_BRACE) && !isAtEnd()) {
+            methods.add(function("method"));
+        }
+
+        consume(RIGHT_BRACE, "Expect '}' after class body.");
+        return new Stmt.Class(name, methods);
+    }
+
     private Stmt whileStatement() {
         consume(LEFT_PAREN, "Expect '(' after 'while'.");
         Expr condition = expression();
@@ -189,6 +205,7 @@ public class Parser {
         return new Expression(value);
     }
 
+    // TODO: create a getter functions
     private Function function(String kind) {
         Token name = consume(IDENTIFIER, "Expect " + kind + " name.");
 
@@ -236,6 +253,8 @@ public class Parser {
             if (expr instanceof Variable) {
                 Token name = ((Variable) expr).name;
                 return new Assign(name, value);
+            } else if (expr instanceof Get get) {
+                return new Set(get.object, get.name, value);
             }
 
             error(equals, "Invalid assignment target.");
@@ -282,6 +301,9 @@ public class Parser {
         while (true) {
             if (match(LEFT_PAREN)) {
                 expr = finishCall(expr);
+            } else if (match(DOT)) {
+                Token name = consume(IDENTIFIER, "Expect property name after '.'.");
+                expr = new Get(expr, name);
             } else {
                 break;
             }
@@ -316,6 +338,10 @@ public class Parser {
 
         if (match(NIL)) {
             return new Literal(null);
+        }
+
+        if (match(THIS)) {
+            return new This(previous());
         }
 
         if (match(IDENTIFIER)) {
