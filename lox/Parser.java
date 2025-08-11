@@ -168,6 +168,7 @@ public class Parser {
     private Stmt classDeclaration() {
         Token name = consume(IDENTIFIER, "Expect class name.");
 
+        //TODO: implement the multiple inheritance
         Expr.Variable superClass = null;
         if (match(LESS)) {
             consume(IDENTIFIER, "Expect superclass name.");
@@ -356,6 +357,13 @@ public class Parser {
 
         if (match(NUMBER, STRING)) {
             return new Literal(previous().literal());
+        }
+
+        if (match(SUPER)) {
+            Token keyword = previous();
+            consume(DOT, "Expect '.' after 'super'.");
+            Token method = consume(IDENTIFIER, "Expect superclass method name.");
+            return new Expr.Super(keyword, method);
         }
 
         if (match(LEFT_PAREN)) {

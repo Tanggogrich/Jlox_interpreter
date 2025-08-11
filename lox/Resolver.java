@@ -32,7 +32,8 @@ public class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 
     private enum ClassType {
         CLASS,
-        NONE
+        NONE,
+        SUBCLASS
     }
 
     @Override
@@ -42,7 +43,7 @@ public class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         endScope();
         return null;
     }
-
+    //TODO: bug fix - multiple use of return, break and continue in class's methods
     @Override
     public Void visitClassStmt(Stmt.Class stmt) {
         ClassType enclosingClass = currentClass;
@@ -56,7 +57,13 @@ public class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         }
 
         if (stmt.superClass != null) {
+            currentClass = ClassType.SUBCLASS;
             resolve(stmt.superClass);
+        }
+
+        if (stmt.superClass != null) {
+            beginScope();
+            scopes.peek().put("super", new VariableStatus(stmt.superClass.name,true, true));
         }
 
         beginScope();
@@ -71,6 +78,10 @@ public class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         }
 
         endScope();
+
+        if (stmt.superClass != null) {
+            endScope();
+        }
 
         currentClass = enclosingClass;
         return null;
@@ -203,6 +214,17 @@ public class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         if (currentFunction == FunctionType.NONE) {
             Lox.error(expr.keyword, "Can't use 'this' outside of a class.");
             return null;
+        }
+        resolveLocal(expr, expr.keyword);
+        return null;
+    }
+
+    @Override
+    public Void visitSuperExpr(Super expr) {
+        if (currentClass == ClassType.NONE) {
+            Lox.error(expr.keyword, "Can't use 'super' outside of a class.");
+        } else if (currentClass != ClassType.SUBCLASS) {
+            Lox.error(expr.keyword, "Can't use 'super' outside in a class with no superclass.");
         }
         resolveLocal(expr, expr.keyword);
         return null;

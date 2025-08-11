@@ -70,4 +70,8 @@ public class Environment {
         throw new RuntimeError(name,
                 "Undefined variable '" + name.lexeme() + "'");
     }
+
+    public Environment getEnclosing() {
+        return enclosing;
+    }
 }

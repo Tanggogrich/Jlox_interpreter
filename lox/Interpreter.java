@@ -27,7 +27,7 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 
             @Override
             public Object call(Interpreter interpreter, List<Object> arguments) {
-                return (double)System.currentTimeMillis() / 1000.0;
+                return (double) System.currentTimeMillis() / 1000.0;
             }
 
             @Override
@@ -175,13 +175,25 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
         }
 
         Object value = evaluate(expr.value);
-        ((LoxInstance)object).set(expr.name, value);
+        ((LoxInstance) object).set(expr.name, value);
         return value;
     }
 
     @Override
     public Object visitThisExpr(This expr) {
         return lookUpVariable(expr.keyword, expr);
+    }
+
+    @Override
+    public Object visitSuperExpr(Super expr) {
+        int distance = locals.get(expr);
+        LoxClass superClass = (LoxClass) environment.getAt(distance, "super");
+        LoxInstance object = (LoxInstance) environment.getAt(distance - 1, "this");
+        LoxFunction method = superClass.findMethod(expr.method.lexeme());
+        if (method == null) {
+            throw new RuntimeError(expr.method, "Undefined property '" + expr.method.lexeme() + "'.");
+        }
+        return method.bind(object);
     }
 
     @Override
@@ -214,7 +226,7 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 
         LoxCallable function = (LoxCallable) callee;
         if (arguments.size() != function.arity()) {
-            throw new RuntimeError(expr.paren,"Expected " +
+            throw new RuntimeError(expr.paren, "Expected " +
                     function.arity() + " arguments but got " +
                     arguments.size() + ".");
         }
@@ -359,7 +371,7 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     }
 
     void executeBlock(List<Stmt> statements,
-                              Environment environment) {
+                      Environment environment) {
         Environment previous = this.environment;
         try {
             this.environment = environment;
@@ -390,6 +402,11 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 
         environment.define(stmt.name.lexeme(), null);
 
+        if (stmt.superClass != null) {
+            environment = new Environment(environment);
+            environment.define("super", superClass);
+        }
+
         Map<String, LoxFunction> methods = new HashMap<>();
         for (Stmt.Function method : stmt.methods) {
             LoxFunction function = new LoxFunction(
@@ -399,7 +416,11 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
                     method.name.lexeme().equals("init"));
             methods.put(method.name.lexeme(), function);
         }
-        LoxClass loxClass = new LoxClass(stmt.name.lexeme(), methods, (LoxClass)superClass);
+        LoxClass loxClass = new LoxClass(stmt.name.lexeme(), methods, (LoxClass) superClass);
+
+        if (stmt.superClass != null) {
+            environment = environment.getEnclosing();
+        }
         environment.assign(stmt.name, loxClass);
         return null;
     }
