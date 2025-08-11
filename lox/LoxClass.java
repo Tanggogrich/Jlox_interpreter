@@ -7,11 +7,14 @@ import java.util.Map;
 //  Hint: https://en.wikipedia.org/wiki/Metaclass
 public class LoxClass implements LoxCallable{
     final String name;
+    final LoxClass superClass;
     private final Map<String, LoxFunction> methods;
 
-    LoxClass(String name, Map<String, LoxFunction> methods) {
+
+    LoxClass(String name, Map<String, LoxFunction> methods,  LoxClass superClass) {
         this.name = name;
         this.methods = methods;
+        this.superClass = superClass;
     }
 
     @Override
@@ -41,6 +44,10 @@ public class LoxClass implements LoxCallable{
     LoxFunction findMethod(String name) {
         if (methods.containsKey(name)) {
             return methods.get(name);
+        }
+
+        if (superClass != null) {
+            return superClass.findMethod(name);
         }
         return null;
     }
