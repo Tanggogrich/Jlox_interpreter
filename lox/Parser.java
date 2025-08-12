@@ -136,7 +136,6 @@ public class Parser {
         return new If(condition, thenBranch, elseBranch);
     }
 
-    //TODO: remove print statement after implementing function calls
     private Stmt printStatement() {
         Expr value = expression();
         consume(SEMICOLON, "Expect ';' after value.");

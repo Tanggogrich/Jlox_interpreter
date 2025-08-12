@@ -1,6 +1,9 @@
 package lox;
 
+import lox.exceptions.BreakException;
+import lox.exceptions.ContinueException;
 import lox.exceptions.ReturnException;
+import lox.exceptions.RuntimeError;
 
 import java.util.List;
 
@@ -45,6 +48,12 @@ public class LoxFunction implements LoxCallable {
                 return closure.getAt(0, "this");
             }
             return returnValue.getValue();
+        } catch (BreakException breakException) {
+            var breakStmt = (Stmt.Break)body.stream().filter(stmt -> stmt instanceof Stmt.Break).findFirst().get();
+            Lox.error(breakStmt.keyword,"'break' outside of loop");
+        } catch (ContinueException continueException) {
+            var continueStmt = (Stmt.Continue)body.stream().filter(stmt -> stmt instanceof Stmt.Continue).findFirst().get();
+            Lox.error(continueStmt.keyword,"'continue' outside of loop");
         }
         if (isInitializer) {
             return closure.getAt(0, "this");

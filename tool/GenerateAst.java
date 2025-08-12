@@ -39,7 +39,6 @@ public class GenerateAst {
                 "Expression : Expr expression",
                 "Function   : Token name, List<Token> params, List<Stmt> body",
                 "If         : Expr condition, Stmt thenBranch, Stmt elseBranch",
-                //TODO: remove print statement after implementing function calls
                 "Print      : Expr expression",
                 "Return     : Token keyword, Expr value",
                 "Var        : Token name, Expr initializer",

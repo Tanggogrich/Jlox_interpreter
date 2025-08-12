@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Stack;
+import java.util.stream.IntStream;
 
 import static lox.Expr.*;
 import static lox.Stmt.*;
@@ -43,6 +44,7 @@ public class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         endScope();
         return null;
     }
+
     //TODO: bug fix - multiple use of return, break and continue in class's methods
     @Override
     public Void visitClassStmt(Stmt.Class stmt) {
@@ -63,7 +65,7 @@ public class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 
         if (stmt.superClass != null) {
             beginScope();
-            scopes.peek().put("super", new VariableStatus(stmt.superClass.name,true, true));
+            scopes.peek().put("super", new VariableStatus(stmt.superClass.name, true, true));
         }
 
         beginScope();
@@ -73,7 +75,7 @@ public class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
             if (method.name.lexeme().equals("init")) {
                 declaration = FunctionType.INITIALIZER;
             }
-
+            exceptionCheck(method);
             resolveCallable(method, declaration);
         }
 
@@ -112,12 +114,12 @@ public class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     @Override
     public Void visitReturnStmt(Return stmt) {
         if (currentFunction == FunctionType.NONE) {
-            Lox.error(stmt.keyword, "Can't return from top-level code.");
+            Lox.error(stmt.keyword, "Can't use 'return' from top-level code.");
         }
 
         if (stmt.value != null) {
             if (currentFunction == FunctionType.INITIALIZER) {
-                Lox.error(stmt.keyword, "Can't return a value from an initializer.");
+                Lox.error(stmt.keyword, "Can't use 'return' a value from an initializer.");
             }
             resolve(stmt.value);
         }
@@ -134,7 +136,7 @@ public class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     @Override
     public Void visitBreakStmt(Break stmt) {
         if (currentFunction == FunctionType.NONE) {
-            Lox.error(stmt.keyword, "Can't break from top-level code.");
+            Lox.error(stmt.keyword, "Can't use 'break' from top-level code.");
         }
         return null;
     }
@@ -142,7 +144,7 @@ public class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     @Override
     public Void visitContinueStmt(Continue stmt) {
         if (currentFunction == FunctionType.NONE) {
-            Lox.error(stmt.keyword, "Can't continue from top-level code.");
+            Lox.error(stmt.keyword, "Can't use 'continue' from top-level code.");
         }
         return null;
     }
@@ -157,7 +159,7 @@ public class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     @Override
     public Void visitCallExpr(Call expr) {
         resolve(expr.callee);
-        for (Expr argument: expr.arguments) {
+        for (Expr argument : expr.arguments) {
             resolve(argument);
         }
         return null;
@@ -313,7 +315,7 @@ public class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         }
         Map<String, VariableStatus> scope = scopes.peek();
         if (scope.containsKey(name.lexeme())) {
-            Lox.error(name,"Already a variable with this name in this scope.");
+            Lox.error(name, "Already a variable with this name in this scope.");
         }
 
         // When declared, it's not yet defined (unless it's a named function, which is defined immediately)
@@ -330,7 +332,7 @@ public class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     }
 
     private void resolveLocal(Expr expr, Token name) {
-        for (int i = scopes.size() - 1; i >= 0 ; i--) {
+        for (int i = scopes.size() - 1; i >= 0; i--) {
             if (scopes.get(i).containsKey(name.lexeme())) {
                 interpreter.resolve(expr, scopes.size() - 1 - i);
                 return;
@@ -350,6 +352,23 @@ public class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 
     private void resolve(Expr expr) {
         expr.accept(this);
+    }
+
+    private void exceptionCheck(Function method) {
+        List<Stmt> bodyStatements = method.body;
+        var returnCount = bodyStatements.stream().filter(stmt -> stmt instanceof Return).count();
+        if (returnCount > 1) {
+            Lox.error(method.name, "Method cannot have more than one 'return' statements.");
+        } else if (returnCount == 1) {
+            IntStream.range(0, bodyStatements.size())
+                    .filter(i -> bodyStatements.get(i) instanceof Return)
+                    .findFirst()
+                    .ifPresent(index -> {
+                        if (index != bodyStatements.size() - 1) {
+                            Lox.error(method.name, "Method cannot have any statements after 'return' statement.");
+                        }
+                    });
+        }
     }
 
     private void resolveCallable(FunctionLikeable functionLikeable, FunctionType type) {

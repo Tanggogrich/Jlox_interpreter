@@ -75,7 +75,6 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
         return null;
     }
 
-    //TODO: remove print statement after implementing function calls
     @Override
     public Void visitPrintStmt(Print stmt) {
         Object value = evaluate(stmt.expression);
@@ -92,7 +91,6 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
         throw new ReturnException(value);
     }
 
-    // TODO: fix bug with a local variable can be referenced in its own initializer
     @Override
     public Void visitVarStmt(Var stmt) {
         Object value = null;
