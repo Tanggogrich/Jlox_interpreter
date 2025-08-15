@@ -45,7 +45,6 @@ public class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         return null;
     }
 
-    //TODO: bug fix - multiple use of return, break and continue in class's methods
     @Override
     public Void visitClassStmt(Stmt.Class stmt) {
         ClassType enclosingClass = currentClass;

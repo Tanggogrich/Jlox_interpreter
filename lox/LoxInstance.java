@@ -2,6 +2,7 @@ package lox;
 
 import lox.exceptions.RuntimeError;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -18,13 +19,16 @@ public class LoxInstance {
         return currentClass.name + " instance";
     }
 
-    Object get(Token name) {
+    Object get(Interpreter interpreter, Token name) {
         if (fields.containsKey(name.lexeme())) {
             return fields.get(name.lexeme());
         }
 
         LoxFunction method = currentClass.findMethod(name.lexeme());
         if (method != null) {
+            if (method.isGetter()) {
+                return method.bind(this).call(interpreter, Collections.emptyList());
+            }
             return method.bind(this);
         }
         throw new RuntimeError(name, "Undefined property: '" + name.lexeme() + "'.");

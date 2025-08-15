@@ -3,7 +3,6 @@ package lox;
 import lox.exceptions.BreakException;
 import lox.exceptions.ContinueException;
 import lox.exceptions.ReturnException;
-import lox.exceptions.RuntimeError;
 
 import java.util.List;
 
@@ -14,6 +13,7 @@ public class LoxFunction implements LoxCallable {
     private final Environment closure;
     private final String name; // For named functions; null for anonymous ones.
     private final boolean isInitializer;
+    private final boolean isGetter;
 
     // Unified constructor for both named and anonymous functions.
     // The 'name' parameter is null for anonymous functions.
@@ -23,6 +23,7 @@ public class LoxFunction implements LoxCallable {
         this.body = body;
         this.closure = closure;
         this.isInitializer = isInitializer;
+        this.isGetter = params.isEmpty();
     }
 
     @Override
@@ -73,5 +74,13 @@ public class LoxFunction implements LoxCallable {
             return "<fn anonymous>"; // Handle anonymous functions correctly
         }
         return "<fn " + name + ">"; // Use the stored name
+    }
+
+    public boolean isGetter() {
+        return isGetter;
+    }
+
+    public Environment getClosure() {
+        return closure;
     }
 }

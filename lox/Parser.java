@@ -211,14 +211,15 @@ public class Parser {
         return new Expression(value);
     }
 
-    // TODO: create a getter functions
     private Function function(String kind) {
         Token name = consume(IDENTIFIER, "Expect " + kind + " name.");
+        List<Token> parameters = new ArrayList<>();
 
-        consume(LEFT_PAREN, "Expect '(' after " + kind + ".");
-        List<Token> parameters = parameters();
-        consume(RIGHT_PAREN, "Expect ')' after parameters.");
-
+        if (check(LEFT_PAREN)) {
+            consume(LEFT_PAREN, "Expect '(' after " + kind + ".");
+            parameters = parameters();
+            consume(RIGHT_PAREN, "Expect ')' after parameters.");
+        }
         //Parse the body and wrap it all up in a function node
         consume(LEFT_BRACE, "Expect '{' before " + kind + " body.");
         List<Stmt> body = block();
