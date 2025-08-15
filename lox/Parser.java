@@ -167,7 +167,6 @@ public class Parser {
     private Stmt classDeclaration() {
         Token name = consume(IDENTIFIER, "Expect class name.");
 
-        //TODO: implement the multiple inheritance
         Expr.Variable superClass = null;
         if (match(LESS)) {
             consume(IDENTIFIER, "Expect superclass name.");

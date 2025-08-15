@@ -21,8 +21,6 @@ public class GenerateAst {
                 "Logical    : Expr left, Token operator, Expr right",
                 "Set        : Expr object, Token name, Expr value",
                 "This       : Token keyword",
-                //TODO: change Super expression on the Inner expression that is working in opposite way to super
-                // (super: bottom-up, inner: top-down)
                 "Super      : Token keyword, Token method",
                 "Unary      : Token operator, Expr right",
                 "Call       : Expr callee, Token paren, List<Expr> arguments",
