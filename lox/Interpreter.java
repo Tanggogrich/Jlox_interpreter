@@ -75,7 +75,6 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
         return null;
     }
 
-    //TODO: remove print statement after implementing function calls
     @Override
     public Void visitPrintStmt(Print stmt) {
         Object value = evaluate(stmt.expression);
@@ -92,7 +91,6 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
         throw new ReturnException(value);
     }
 
-    // TODO: fix bug with a local variable can be referenced in its own initializer
     @Override
     public Void visitVarStmt(Var stmt) {
         Object value = null;
@@ -237,7 +235,7 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     public Object visitGetExpr(Get expr) {
         Object object = evaluate(expr.object);
         if (object instanceof LoxInstance) {
-            return ((LoxInstance) object).get(expr.name);
+            return ((LoxInstance) object).get(this, expr.name);
         }
 
         throw new RuntimeError(expr.name, "Only instances have properties.");
@@ -407,16 +405,32 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
             environment.define("super", superClass);
         }
 
-        Map<String, LoxFunction> methods = new HashMap<>();
+        Map<String, LoxFunction> instanceMethods = new HashMap<>();
+        List<Function> staticMethods = new ArrayList<>();
+
         for (Stmt.Function method : stmt.methods) {
-            LoxFunction function = new LoxFunction(
-                    method.name.lexeme(),
-                    method.params,
-                    method.body, environment,
-                    method.name.lexeme().equals("init"));
-            methods.put(method.name.lexeme(), function);
+            if (method.isStatic) {
+                staticMethods.add(method);
+            } else {
+                LoxFunction function = new LoxFunction(
+                        method.name.lexeme(),
+                        method.params,
+                        method.body, environment,
+                        method.name.lexeme().equals("init"));
+                instanceMethods.put(method.name.lexeme(), function);
+            }
         }
-        LoxClass loxClass = new LoxClass(stmt.name.lexeme(), methods, (LoxClass) superClass);
+        LoxClass loxClass = new LoxClass(stmt.name.lexeme(), instanceMethods, (LoxClass) superClass);
+
+        for (Function staticMethod : staticMethods) {
+            LoxFunction function = new LoxFunction(
+                    staticMethod.name.lexeme(),
+                    staticMethod.params,
+                    staticMethod.body,
+                    environment,
+                    false);
+            loxClass.defineStaticMethod(staticMethod.name, function);
+        }
 
         if (stmt.superClass != null) {
             environment = environment.getEnclosing();
