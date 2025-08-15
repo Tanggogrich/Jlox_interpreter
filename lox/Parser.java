@@ -39,7 +39,7 @@ public class Parser {
                 return classDeclaration();
             }
             if (match(FUN)) {
-                return function("function");
+                return function("function", false);
             }
             if (match(VAR)) {
                 return varDeclaration();
@@ -177,7 +177,12 @@ public class Parser {
 
         List<Stmt.Function> methods = new ArrayList<>();
         while (!check(RIGHT_BRACE) && !isAtEnd()) {
-            methods.add(function("method"));
+            boolean isStatic = false;
+            if (check(CLASS)) {
+                isStatic = true;
+                consume(CLASS, "Expect class keyword before static method.");
+            }
+            methods.add(function("method", isStatic));
         }
 
         consume(RIGHT_BRACE, "Expect '}' after class body.");
@@ -211,7 +216,7 @@ public class Parser {
         return new Expression(value);
     }
 
-    private Function function(String kind) {
+    private Function function(String kind, boolean isStatic) {
         Token name = consume(IDENTIFIER, "Expect " + kind + " name.");
         List<Token> parameters = new ArrayList<>();
 
@@ -223,7 +228,7 @@ public class Parser {
         //Parse the body and wrap it all up in a function node
         consume(LEFT_BRACE, "Expect '{' before " + kind + " body.");
         List<Stmt> body = block();
-        return new Function(name, parameters, body);
+        return new Function(name, parameters, body, isStatic);
     }
 
     private List<Stmt> block() {
@@ -401,7 +406,7 @@ public class Parser {
     }
 
     private Expr lambdaExpression() {
-        consume(LEFT_PAREN, "Expect '(' after 'fun'.");
+        consume(LEFT_PAREN, "Expect '(' after 'fun' as a anonymous function.");
         List<Token> parameters = parameters();
         consume(RIGHT_PAREN, "Expect ')' after parameters.");
         consume(LEFT_BRACE, "Expect '{' before function body.");

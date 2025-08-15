@@ -23,8 +23,12 @@ public class LoxInstance {
         if (fields.containsKey(name.lexeme())) {
             return fields.get(name.lexeme());
         }
-
-        LoxFunction method = currentClass.findMethod(name.lexeme());
+        LoxFunction method;
+        try {
+            method = currentClass.findMethod(name.lexeme());
+        } catch (NullPointerException e) {
+            throw new RuntimeError(name, "You cannot call a non-static method without first initialising the class!");
+        }
         if (method != null) {
             if (method.isGetter()) {
                 return method.bind(this).call(interpreter, Collections.emptyList());

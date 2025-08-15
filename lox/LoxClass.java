@@ -3,15 +3,14 @@ package lox;
 import java.util.List;
 import java.util.Map;
 
-// TODO: use a metaclasses to provide a "static" methods
-//  Hint: https://en.wikipedia.org/wiki/Metaclass
-public class LoxClass implements LoxCallable{
+public class LoxClass extends LoxInstance implements LoxCallable{
     final String name;
     final LoxClass superClass;
     private final Map<String, LoxFunction> methods;
 
 
     LoxClass(String name, Map<String, LoxFunction> methods,  LoxClass superClass) {
+        super(null);
         this.name = name;
         this.methods = methods;
         this.superClass = superClass;
@@ -50,5 +49,9 @@ public class LoxClass implements LoxCallable{
             return superClass.findMethod(name);
         }
         return null;
+    }
+
+    void defineStaticMethod(Token name, Object value) {
+        super.set(name, value);
     }
 }
