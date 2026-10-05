@@ -49,7 +49,7 @@ public class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         define(stmt.name);
 
         if (stmt.superClass != null && stmt.name.lexeme().equals(stmt.superClass.name.lexeme())) {
-            Lox.error(stmt.superClass.name, "A class can't inherit from itself.");
+            Application.error(stmt.superClass.name, "A class can't inherit from itself.");
         }
 
         if (stmt.superClass != null) {
@@ -108,12 +108,12 @@ public class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     @Override
     public Void visitReturnStmt(Return stmt) {
         if (currentFunction == FunctionType.NONE) {
-            Lox.error(stmt.keyword, "Can't use 'return' from top-level code.");
+            Application.error(stmt.keyword, "Can't use 'return' from top-level code.");
         }
 
         if (stmt.value != null) {
             if (currentFunction == FunctionType.INITIALIZER) {
-                Lox.error(stmt.keyword, "Can't use 'return' a value from an initializer.");
+                Application.error(stmt.keyword, "Can't use 'return' a value from an initializer.");
             }
             resolve(stmt.value);
         }
@@ -130,7 +130,7 @@ public class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     @Override
     public Void visitBreakStmt(Break stmt) {
         if (currentFunction == FunctionType.NONE) {
-            Lox.error(stmt.keyword, "Can't use 'break' from top-level code.");
+            Application.error(stmt.keyword, "Can't use 'break' from top-level code.");
         }
         return null;
     }
@@ -138,7 +138,7 @@ public class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     @Override
     public Void visitContinueStmt(Continue stmt) {
         if (currentFunction == FunctionType.NONE) {
-            Lox.error(stmt.keyword, "Can't use 'continue' from top-level code.");
+            Application.error(stmt.keyword, "Can't use 'continue' from top-level code.");
         }
         return null;
     }
@@ -208,7 +208,7 @@ public class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     @Override
     public Void visitThisExpr(This expr) {
         if (currentFunction == FunctionType.NONE) {
-            Lox.error(expr.keyword, "Can't use 'this' outside of a class.");
+            Application.error(expr.keyword, "Can't use 'this' outside of a class.");
             return null;
         }
         resolveLocal(expr, expr.keyword);
@@ -218,9 +218,9 @@ public class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     @Override
     public Void visitSuperExpr(Super expr) {
         if (currentClass == ClassType.NONE) {
-            Lox.error(expr.keyword, "Can't use 'super' outside of a class.");
+            Application.error(expr.keyword, "Can't use 'super' outside of a class.");
         } else if (currentClass != ClassType.SUBCLASS) {
-            Lox.error(expr.keyword, "Can't use 'super' outside in a class with no superclass.");
+            Application.error(expr.keyword, "Can't use 'super' outside in a class with no superclass.");
         }
         resolveLocal(expr, expr.keyword);
         return null;
@@ -258,7 +258,7 @@ public class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
             if (scope.containsKey(expr.name.lexeme())) {
                 VariableStatus status = scope.get(expr.name.lexeme());
                 if (!status.isDefined) { // Check if defined
-                    Lox.error(expr.name, "Can't read local variable in its own initializer.");
+                    Application.error(expr.name, "Can't read local variable in its own initializer.");
                 }
                 status.isUsed = true; // Mark as used when read
             }
@@ -297,7 +297,7 @@ public class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         for (Map.Entry<String, VariableStatus> entry : scope.entrySet()) {
             VariableStatus status = entry.getValue();
             if (!status.isUsed && !status.isKeyword) {
-                Lox.error(status.declarationToken,
+                Application.error(status.declarationToken,
                         "Local variable '" + status.declarationToken.lexeme() + "' is never used.");
             }
         }
@@ -309,7 +309,7 @@ public class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         }
         Map<String, VariableStatus> scope = scopes.peek();
         if (scope.containsKey(name.lexeme())) {
-            Lox.error(name, "Already a variable with this name in this scope.");
+            Application.error(name, "Already a variable with this name in this scope.");
         }
 
         // When declared, it's not yet defined (unless it's a named function, which is defined immediately)
@@ -352,14 +352,14 @@ public class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
         List<Stmt> bodyStatements = method.body;
         var returnCount = bodyStatements.stream().filter(stmt -> stmt instanceof Return).count();
         if (returnCount > 1) {
-            Lox.error(method.name, "Method cannot have more than one 'return' statements.");
+            Application.error(method.name, "Method cannot have more than one 'return' statements.");
         } else if (returnCount == 1) {
             IntStream.range(0, bodyStatements.size())
                     .filter(i -> bodyStatements.get(i) instanceof Return)
                     .findFirst()
                     .ifPresent(index -> {
                         if (index != bodyStatements.size() - 1) {
-                            Lox.error(method.name, "Method cannot have any statements after 'return' statement.");
+                            Application.error(method.name, "Method cannot have any statements after 'return' statement.");
                         }
                     });
         }

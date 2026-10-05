@@ -11,7 +11,7 @@ import java.nio.file.Path;
 import java.util.List;
 
 
-public class Lox {
+public class Application {
     private static final Interpreter interpreter = new Interpreter();
     static boolean hadError = false;
     static boolean hadRuntimeError = false;

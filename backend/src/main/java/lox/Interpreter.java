@@ -13,12 +13,12 @@ import java.util.Map;
 import static lox.Expr.*;
 import static lox.Stmt.*;
 
-public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
+public class Interpreter implements lox.Expr.Visitor<Object>, Stmt.Visitor<Void> {
     final Environment globals = new Environment();
     private Environment environment = globals;
     private final Map<Expr, Integer> locals = new HashMap<>();
 
-    Interpreter() {
+    public Interpreter() {
         globals.define("clock", new LoxCallable() {
             @Override
             public int arity() {
@@ -43,7 +43,7 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
                 execute(statement);
             }
         } catch (RuntimeError error) {
-            Lox.runtimeError(error, this.getClass());
+            Application.runtimeError(error, this.getClass());
         }
     }
 

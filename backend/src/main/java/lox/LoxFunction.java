@@ -51,10 +51,10 @@ public class LoxFunction implements LoxCallable {
             return returnValue.getValue();
         } catch (BreakException breakException) {
             var breakStmt = (Stmt.Break)body.stream().filter(stmt -> stmt instanceof Stmt.Break).findFirst().get();
-            Lox.error(breakStmt.keyword,"'break' outside of loop");
+            Application.error(breakStmt.keyword,"'break' outside of loop");
         } catch (ContinueException continueException) {
             var continueStmt = (Stmt.Continue)body.stream().filter(stmt -> stmt instanceof Stmt.Continue).findFirst().get();
-            Lox.error(continueStmt.keyword,"'continue' outside of loop");
+            Application.error(continueStmt.keyword,"'continue' outside of loop");
         }
         if (isInitializer) {
             return closure.getAt(0, "this");

@@ -507,7 +507,7 @@ public class Parser {
     }
 
     private ParseError error(Token token, String message) {
-        Lox.error(token, message);
+        Application.error(token, message);
         return new ParseError(message);
     }
 
